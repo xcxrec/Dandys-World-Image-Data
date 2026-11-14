@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<title>DW Toon Renders</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #000;
+  --surface: #090909;
+  --surface-hover: #111;
+  --border: #222;
+  --muted: #858585;
+  --text: #ededed;
+  --accent: #a8a8a8;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 Arial, Helvetica, sans-serif;
+}
+header {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 27px 22px 18px;
+  border-bottom: 1px solid #181818;
+}
+.header-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -.35px;
+}
+header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+main { max-width: 1280px; margin: 0 auto; padding: 18px 22px 50px; }
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+#search {
+  min-width: 0;
+  flex: 1;
+  height: 38px;
+  border: 1px solid #292929;
+  border-radius: 5px;
+  outline: none;
+  background: #080808;
+  color: var(--text);
+  padding: 0 11px;
+  font: inherit;
+}
+#search:focus { border-color: #666; }
+button {
+  height: 38px;
+  border: 1px solid #303030;
+  border-radius: 5px;
+  background: #111;
+  color: #eee;
+  padding: 0 12px;
+  font: inherit;
+  cursor: pointer;
+}
+button:hover { background: #1b1b1b; border-color: #555; }
+button:disabled { opacity: .35; cursor: default; }
+.summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 0 1px 13px;
+}
+#grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  gap: 10px;
+}
+.toon {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.toon-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 39px;
+  padding: 0 11px;
+  border-bottom: 1px solid #1c1c1c;
+}
+.toon-name { font-size: 13px; font-weight: 600; }
+.toon-code { color: #686868; font-size: 10px; }
+.images {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: #202020;
+}
+.image-cell {
+  min-width: 0;
+  background: #050505;
+  padding: 7px;
+}
+.image-label {
+  color: #888;
+  font-size: 10px;
+  margin: 0 0 6px;
+  white-space: nowrap;
+}
+.image-frame {
+  height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #090909;
+  overflow: hidden;
+}
+.image-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.image-frame .missing {
+  color: #555;
+  font-size: 10px;
+  text-align: center;
+}
+.cell-actions { margin-top: 7px; }
+.cell-actions button {
+  width: 100%;
+  height: 29px;
+  padding: 0 4px;
+  font-size: 11px;
+}
+.card-bottom { padding: 8px; }
+.card-bottom button { width: 100%; height: 32px; font-size: 12px; }
+#empty {
+  display: none;
+  padding: 45px 10px;
+  text-align: center;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+footer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 22px 25px;
+  color: #555;
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  header { padding: 22px 14px 15px; }
+  main { padding: 14px 14px 35px; }
+  footer { padding: 0 14px 22px; }
+  #grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 8px; }
+  .image-frame { height: 90px; }
+  .image-cell { padding: 5px; }
+  .controls { gap: 7px; }
+  button { padding: 0 9px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-line">
+    <h1>DW Toon Renders</h1>
+  </div>
+  <p>- made by rec</p>
+</header>
+
+<main>
+  <div class="controls">
+    <input id="search" type="search" placeholder="Search toons..." autocomplete="off" aria-label="Search toons">
+    <button id="downloadVisible" type="button">Download all</button>
+  </div>
+  <div class="summary">
+    <span id="resultCount">42 toons</span>
+  </div>
+  <section id="grid" aria-live="polite"></section>
+  <div id="empty">No results</div>
+</main>
+<footer>boing boing</footer>
+
+<script>
+const TOONS = ["Astro", "Bassie", "Blot", "Bobette", "Boxten", "Brightney", "Brusha", "Coal", "Cocoa", "Connie", "Cosmo", "Dandy", "Dyle", "Eclipse", "Eggson", "Finn", "Flutter", "Flyte", "Gigi", "Ginger", "Glisten", "Goob", "Gourdy", "Looey", "Pebble", "Poppy", "Razzle_And_Dazzle", "Ribecca", "Rodger", "Rudie", "Scraps", "Shelly", "Shrimpo", "Soulvester", "Sprout", "Squirm", "Teagan", "Tisha", "Toodles", "Vee", "Waxwell", "Yatta"];
+const BASE = 'https://raw.githubusercontent.com/xcxrec/Dandys-World-Image-Data/refs/heads/main/Data/';
+const TYPES = [
+  { key: 'Headshot', label: 'Headshot', filename: name => `${name}.png` },
+  { key: 'Icon', label: 'Drawn icon', filename: name => `${name}_Icon.png` },
+  { key: 'Full_Render', label: 'Full render', filename: name => `${name}_Full_Render.png` }
+];
+
+const grid = document.getElementById('grid');
+const search = document.getElementById('search');
+const resultCount = document.getElementById('resultCount');
+const empty = document.getElementById('empty');
+const downloadVisible = document.getElementById('downloadVisible');
+
+function imageUrl(toon, type) {
+  return BASE + encodeURIComponent(toon) + '/' + encodeURIComponent(type.filename(toon));
+}
+
+function makeButton(text, callback) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = text;
+  button.addEventListener('click', callback);
+  return button;
+}
+
+async function download(url, filename) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Image not found');
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+  } catch (error) {
+    // Fallback for a missing file or a browser/network restriction.
+    window.open(url, '_blank', 'noopener');
+  }
+}
+
+function createCard(toon) {
+  const card = document.createElement('article');
+  card.className = 'toon';
+
+  const head = document.createElement('div');
+  head.className = 'toon-head';
+  const name = document.createElement('span');
+  name.className = 'toon-name';
+  name.textContent = toon.replaceAll('_', ' ');
+  const code = document.createElement('span');
+  code.className = 'toon-code';
+  code.textContent = 'TOON';
+  head.append(name, code);
+
+  const images = document.createElement('div');
+  images.className = 'images';
+
+  for (const type of TYPES) {
+    const url = imageUrl(toon, type);
+    const filename = type.filename(toon);
+    const cell = document.createElement('div');
+    cell.className = 'image-cell';
+
+    const label = document.createElement('div');
+    label.className = 'image-label';
+    label.textContent = type.label;
+
+    const frame = document.createElement('div');
+    frame.className = 'image-frame';
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = `${toon} ${type.label}`;
+    img.loading = 'lazy';
+    img.onerror = () => {
+      img.remove();
+      const missing = document.createElement('span');
+      missing.className = 'missing';
+      missing.textContent = 'Unavailable';
+      frame.append(missing);
+      cell.querySelector('button').disabled = true;
+    };
+    frame.append(img);
+
+    const actions = document.createElement('div');
+    actions.className = 'cell-actions';
+    const button = makeButton('Download', () => download(url, filename));
+    actions.append(button);
+
+    cell.append(label, frame, actions);
+    images.append(cell);
+  }
+
+  const bottom = document.createElement('div');
+  bottom.className = 'card-bottom';
+  bottom.append(makeButton('Download all 3', () => {
+    TYPES.forEach((type, index) => {
+      setTimeout(() => download(imageUrl(toon, type), type.filename(toon)), index * 500);
+    });
+  }));
+
+  card.append(head, images, bottom);
+  return card;
+}
+
+function render() {
+  const query = search.value.trim().toLowerCase();
+  const shown = TOONS.filter(toon => toon.toLowerCase().replaceAll('_', ' ').includes(query)
+    || toon.toLowerCase().includes(query));
+  grid.replaceChildren();
+  for (const toon of shown) grid.append(createCard(toon));
+  resultCount.textContent = `${shown.length} of ${TOONS.length} toons`;
+  empty.style.display = shown.length ? 'none' : 'block';
+  downloadVisible.disabled = shown.length === 0;
+}
+
+search.addEventListener('input', render);
+downloadVisible.addEventListener('click', () => {
+  const query = search.value.trim().toLowerCase();
+  const shown = TOONS.filter(toon => toon.toLowerCase().replaceAll('_', ' ').includes(query)
+    || toon.toLowerCase().includes(query));
+  let index = 0;
+  for (const toon of shown) {
+    for (const type of TYPES) {
+      setTimeout(() => download(imageUrl(toon, type), type.filename(toon)), index * 450);
+      index++;
+    }
+  }
+});
+
+render();
+</script>
+</body>
+</html>
